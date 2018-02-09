@@ -24,11 +24,13 @@
 #include <errno.h>
 #include <getopt.h>
 #include <byteswap.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 #include <stdbool.h>
 #include <limits.h>
 #include <regex.h>
+
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
 #include "libfdt.h"
 
@@ -552,6 +554,12 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 	} else {
+		int bytes;
+
+		ioctl(STDIN_FILENO, FIONREAD, &bytes);
+		if (!bytes)
+			return -EINVAL;
+
 		fd_dtb = STDIN_FILENO;
 	}
 
