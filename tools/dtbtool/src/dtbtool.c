@@ -447,6 +447,11 @@ static int dtbtool_print(void *dtb, char *node_name, int fd_out)
 	return 0;
 }
 
+static int dtbtool_merge(void *dtb, void *dtbo, int fd_out)
+{
+	return fdt_overlay_apply(dtb, dtbo);
+}
+
 static const struct option main_options[] = {
 	{ "help", no_argument, NULL, 'h' },
 	{ "enable", no_argument, NULL, 'e' },
@@ -455,6 +460,7 @@ static const struct option main_options[] = {
 	{ "get-prop", required_argument, NULL, 'g' },
 	{ "out", required_argument, NULL, 'o' },
 	{ "node", required_argument, NULL, 'n' },
+	{ "merge", required_argument, NULL, 'm'},
 	{ "print", required_argument, NULL, 'p' },
 	{ },
 };
@@ -463,6 +469,7 @@ static void usage(void)
 {
 	printf("Usage: dtbtool [options]\n" \
 	       "options:\n" \
+	       "   -m, --merge <dtbo>\n" \
 	       "   -n, --node <node>\n" \
 	       "   -e, --enable\n" \
 	       "         enable node (status=\"ok\")\n" \
@@ -488,14 +495,14 @@ int main(int argc, char *argv[])
 {
 	bool set_prop = false, get_prop = false, print = false;
 	char prop_enable[] = "status=okay", prop_disable[] = "status=disabled";
-	int ret = -EINVAL, fd_dtb = -1, fd_out = -1;
-	char *path_dtb = NULL, *path_out = NULL;
+	int ret = -EINVAL, fd_dtb = -1, fd_out = -1, fd_dtbo = -1;
+	char *path_dtb = NULL, *path_out = NULL, *path_dtbo = NULL;
 	char *prop = NULL, *node = NULL;
-	void *dtb;
+	void *dtb, *dtbo = NULL;
 
 	for (;;) {
-		int opt = getopt_long(argc, argv, "n:x:u:o:s:g:hedp", main_options,
-				      NULL);
+		int opt = getopt_long(argc, argv, "m:n:x:u:o:s:g:hedp",
+				      main_options, NULL);
 		if (opt < 0)
 			break;
 
@@ -525,6 +532,9 @@ int main(int argc, char *argv[])
 		case 'p':
 			print = true;
 			break;
+		case 'm':
+			path_dtbo = optarg;
+			break;
 		case 'h':
 			usage();
 			return EXIT_SUCCESS;
@@ -545,10 +555,23 @@ int main(int argc, char *argv[])
 		fd_dtb = STDIN_FILENO;
 	}
 
+	if (path_dtbo) {
+		fd_dtbo = open(path_dtbo, O_RDWR);
+		if (fd_dtbo < 0) {
+			perror("unable to open DTB overlay");
+			goto error_dtb;
+		}
+
+		dtbo = dtb_load_fromfd(fd_dtbo, 0);
+	}
+
 	if (!path_out && path_dtb && set_prop)
 		path_out = path_dtb;
 
-	dtb = dtb_load_fromfd(fd_dtb, 1024);
+	if (dtbo)
+		dtb = dtb_load_fromfd(fd_dtb, dtb_size(dtbo) * 2);
+	else
+		dtb = dtb_load_fromfd(fd_dtb, 2048); /* magic ? */
 	if (!dtb)
 		goto error_dtb;
 
@@ -578,6 +601,12 @@ int main(int argc, char *argv[])
 		ret = dtbtool_get_prop(dtb, node, prop, fd_out);
 	} else if (print) {
 		dtbtool_print(dtb, node, fd_out);
+	} else if (dtbo) {
+		ret = dtbtool_merge(dtb, dtbo, fd_out);
+		if (!ret)
+			write(fd_out, dtb, dtb_size(dtb));
+	} else {
+		usage();
 	}
 
 out:
@@ -585,6 +614,10 @@ out:
 error_out:
 	free(dtb);
 error_dtb:
+	if (dtbo)
+		free(dtbo);
+	if (fd_dtbo > 0)
+		close(fd_dtbo);
 	close(fd_dtb);
 
 	return ret;
