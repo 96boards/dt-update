@@ -554,11 +554,12 @@ int main(int argc, char *argv[])
 			return -EINVAL;
 		}
 	} else {
-		int bytes;
+		int bytes, retry = 10;
 
-		ioctl(STDIN_FILENO, FIONREAD, &bytes);
-		if (!bytes)
-			return -EINVAL;
+		/* TODO better solution */
+		do {
+			ioctl(STDIN_FILENO, FIONREAD, &bytes);
+		} while (!bytes && retry-- && usleep(100000));
 
 		fd_dtb = STDIN_FILENO;
 	}
