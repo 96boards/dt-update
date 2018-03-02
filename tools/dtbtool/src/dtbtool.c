@@ -609,7 +609,7 @@ int main(int argc, char *argv[])
 	} else if (get_prop) {
 		ret = dtbtool_get_prop(dtb, node, prop, fd_out);
 	} else if (print) {
-		dtbtool_print(dtb, node, fd_out);
+		ret = dtbtool_print(dtb, node, fd_out);
 	} else if (dtbo) {
 		ret = dtbtool_merge(dtb, dtbo, fd_out);
 		if (!ret)
