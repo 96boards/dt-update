@@ -1,0 +1,17 @@
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "qcom,msm8916";
+
+	fragment@0 {
+		target-path = "/soc/i2c@78b6000";
+		__overlay__ {
+			status = "ok";
+			ds1307@68{
+				compatible = "dallas,ds1307";
+				reg = <0x68>;
+				status = "okay";
+			};
+		};
+	};
+};
