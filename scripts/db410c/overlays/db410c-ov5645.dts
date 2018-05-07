@@ -1,0 +1,29 @@
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "qcom,msm8916";
+
+	fragment@0 {
+		target-path = "/soc/cci@1b0c000";
+		__overlay__ {
+			status = "ok";
+			camera_rear@3b {
+				status = "ok";
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/soc/camss@1b00000";
+		__overlay__ {
+			status = "ok";
+			ports {
+				port@0 {
+					endpoint {
+						status = "ok";
+					};
+				};
+			};
+		};
+	};
+};
