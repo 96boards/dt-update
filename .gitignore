@@ -1,0 +1,5 @@
+*.o
+.*.swp
+tools/dbootimg/dbootimg
+tools/dtbtool/dtbtool
+tools/dtbtool/libfdt/libfdt-sharedlib.a
