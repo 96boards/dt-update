@@ -1,0 +1,29 @@
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "qcom,msm8916";
+
+	/* On Low speed expansion header */
+	fragment@0 {
+		target-path = "spi0";
+		__overlay__ {
+			spidev@0 {
+				compatible = "spidev";
+				spi-max-frequency = <500000>;
+				reg = <0>;
+			};
+		};
+	};
+
+	/* On High speed expansion header */
+	fragment@1 {
+		target-path = "spi1";
+		__overlay__ {
+			spidev@0 {
+				compatible = "spidev";
+				spi-max-frequency = <500000>;
+				reg = <0>;
+			};
+		};
+	};
+};
