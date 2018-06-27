@@ -16,7 +16,12 @@ maintainer-clean : clean
 	$(RM) $(DTBS)
 
 %.dtbo : %.dts
-	dtc -Wno-avoid_default_addr_size -Wno-avoid_unnecessary_addr_size \
+ifndef KERNEL_PATH
+	$(error KERNEL_PATH is not set)
+else
+	$(CC) -E -nostdinc -I$(KERNEL_PATH)/include/ -x assembler-with-cpp $< | \
+	    $(KERNEL_PATH)/scripts/dtc/dtc -Wno-avoid_default_addr_size \
 	    -Wno-reg_format -Wno-unit_address_vs_reg -Odtb\
 	    -o $@ \
-	    -@ $<
+	    -@
+endif
