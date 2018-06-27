@@ -1,0 +1,94 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/qcom,gcc-msm8916.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "qcom,msm8916";
+
+	fragment@0 {
+		target-path = "/soc";
+		__overlay__ {
+			camera_rear_vdddo: fixedregulator_camera_rear@0 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_rear_vdddo";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			camera_rear_vdda: fixedregulator_camera_rear@1 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_rear_vdda";
+				regulator-min-microvolt = <2800000>;
+				regulator-max-microvolt = <2800000>;
+				regulator-always-on;
+			};
+
+			camera_rear_vddd: fixedregulator_camera_rear@2 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_rear_vddd";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <1500000>;
+				regulator-always-on;
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/soc/cci@1b0c000";
+		__overlay__ {
+			status = "ok";
+
+			camera_rear@3b {
+				compatible = "ovti,ov5645";
+				reg = <0x3b>;
+
+				enable-gpios = <&msmgpio 34 GPIO_ACTIVE_HIGH>;
+				reset-gpios = <&msmgpio 35 GPIO_ACTIVE_LOW>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&camera_rear_default>;
+
+				clocks = <&gcc GCC_CAMSS_MCLK0_CLK>;
+				clock-names = "xclk";
+				clock-frequency = <23880000>;
+
+				vdddo-supply = <&camera_rear_vdddo>;
+				vdda-supply = <&camera_rear_vdda>;
+				vddd-supply = <&camera_rear_vddd>;
+
+				status = "ok";
+
+				port {
+					camera_rear_ep: endpoint {
+						clock-lanes = <1>;
+						data-lanes = <0 2>;
+						remote-endpoint = <&csiphy0_ep>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = "/soc/camss@1b00000";
+		__overlay__ {
+			status = "ok";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@0 {
+					reg = <0>;
+					csiphy0_ep: endpoint {
+						clock-lanes = <1>;
+						data-lanes = <0 2>;
+						remote-endpoint = <&camera_rear_ep>;
+						status = "ok";
+					};
+				};
+			};
+		};
+	};
+};
