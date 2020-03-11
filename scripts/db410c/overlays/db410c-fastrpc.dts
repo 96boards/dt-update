@@ -1,0 +1,24 @@
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "qcom,msm8916";
+
+	fragment@0 {
+		target-path = "/soc/remoteproc@4080000/smd-edge";
+		__overlay__ {
+			fastrpc {
+				compatible = "qcom,fastrpc";
+				qcom,smd-channels = "fastrpcsmd-apps-dsp";
+				label = "adsp";
+
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				cb@1{
+					compatible = "qcom,fastrpc-compute-cb";
+					reg = <1>;
+				};
+			};
+		};
+	};
+};
