@@ -1,0 +1,94 @@
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/qcom,gcc-msm8916.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "qcom,msm8916";
+
+	fragment@0 {
+		target-path = "/soc";
+		__overlay__ {
+			camera_front_vdddo: fixedregulator_camera_front@0 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_front_vdddo";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-always-on;
+			};
+
+			camera_front_vdda: fixedregulator_camera_front@1 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_front_vdda";
+				regulator-min-microvolt = <2800000>;
+				regulator-max-microvolt = <2800000>;
+				regulator-always-on;
+			};
+
+			camera_front_vddd: fixedregulator_camera_front@2 {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_front_vddd";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <1500000>;
+				regulator-always-on;
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/soc/cci@1b0c000";
+		__overlay__ {
+			status = "ok";
+
+			camera_front@3a {
+				compatible = "ovti,ov5645";
+				reg = <0x3a>;
+
+				enable-gpios = <&msmgpio 33 GPIO_ACTIVE_HIGH>;
+				reset-gpios = <&msmgpio 28 GPIO_ACTIVE_LOW>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&camera_front_default>;
+
+				clocks = <&gcc GCC_CAMSS_MCLK1_CLK>;
+				clock-names = "xclk";
+				clock-frequency = <23880000>;
+
+				vdddo-supply = <&camera_front_vdddo>;
+				vdda-supply = <&camera_front_vdda>;
+				vddd-supply = <&camera_front_vddd>;
+
+				status = "ok";
+
+				port {
+					camera_front_ep: endpoint {
+						clock-lanes = <1>;
+						data-lanes = <0 2>;
+						remote-endpoint = <&csiphy1_ep>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = "/soc/camss@1b00000";
+		__overlay__ {
+			status = "ok";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@1 {
+					reg = <1>;
+					csiphy1_ep: endpoint {
+						clock-lanes = <1>;
+						data-lanes = <0 2>;
+						remote-endpoint = <&camera_front_ep>;
+						status = "ok";
+					};
+				};
+			};
+		};
+	};
+};
