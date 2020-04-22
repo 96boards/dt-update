@@ -430,7 +430,7 @@ static void *aboot_update_dtb(void *boot, void *dtb, bool force)
 static void *aboot_update_kernel(void *boot, void *kernel)
 {
 	struct aboot_hdr *aboot, *old_aboot = boot;
-	ssize_t page_sz, kernel_sz, align_sz;
+	ssize_t page_sz, kernel_sz, align_sz, dtb_sz;
 	void *old_kernel, *dtb, *ptr;
 	int diff;
 
@@ -438,6 +438,7 @@ static void *aboot_update_kernel(void *boot, void *kernel)
 	old_kernel = aboot_get_kernel(old_aboot);
 	kernel_sz = kernelgz_size(kernel);
 	dtb = aboot_get_dtb(old_aboot);
+	dtb_sz = dtb ? dtb_size(dtb) : 0;
 
 	diff = kernel_sz - kernelgz_size(old_kernel);
 
@@ -457,11 +458,11 @@ static void *aboot_update_kernel(void *boot, void *kernel)
 	ptr += kernel_sz;
 
 	/* copy appended dtb */
-	memcpy(ptr, dtb, dtb_size(dtb));
-	ptr += dtb_size(dtb);
+	memcpy(ptr, dtb, dtb_sz);
+	ptr += dtb_sz;
 
 	/* modify kernel size (kernel.gz + dtb) */
-	aboot->kernel_size = cpu_to_le32(kernel_sz + dtb_size(dtb));
+	aboot->kernel_size = cpu_to_le32(kernel_sz + dtb_sz);
 
 	/* align on page */
 	align_sz = page_sz - le32_to_cpu(aboot->kernel_size) % page_sz;
